@@ -1,0 +1,197 @@
+---
+name: Publish release
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'The version number to tag and release'
+        required: true
+        type: string
+      prerelease:
+        description: 'Release as pre-release'
+        required: false
+        type: boolean
+        default: false
+jobs:
+  linux:
+    runs-on: ubuntu-latest
+    name: linux-${{ matrix.arch }}-${{ matrix.libc }}
+    strategy:
+      matrix:
+        arch: [x64, arm64]
+        libc: [glibc, musl]
+    steps:
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Build Image
+        run: docker buildx build --load --platform linux/${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }} -t thread-cpu-usage-builder -f docker/dockerfile.${{ matrix.libc }} .
+      - name: Build Addon
+        run: docker run --platform linux/${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }} -v ./artifacts:/app/artifacts thread-cpu-usage-builder npm run build
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-${{ matrix.arch }}-${{ matrix.libc }}
+          path: artifacts/thread-cpu-usage-native.node
+
+  darwin-x64-glibc:
+    runs-on: macos-13
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        uses: nick-fields/retry@v3.0.0
+        with:
+          max_attempts: 10
+          timeout_minutes: 15
+          retry_on: error
+          command: pnpm install
+      - name: Build the addon
+        run: pnpm run build
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: darwin-x64-glibc
+          path: artifacts/thread-cpu-usage-native.node
+  darwin-arm64-glibc:
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        uses: nick-fields/retry@v3.0.0
+        with:
+          max_attempts: 10
+          timeout_minutes: 15
+          retry_on: error
+          command: pnpm install
+      - name: Build the addon
+        run: pnpm run build
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: darwin-arm64-glibc
+          path: artifacts/thread-cpu-usage-native.node
+  windows-x64-glibc:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+      - name: Install dependencies
+        uses: nick-fields/retry@v3.0.0
+        with:
+          max_attempts: 10
+          timeout_minutes: 15
+          retry_on: error
+          command: pnpm install
+      - name: Build the addon
+        run: pnpm run build
+      - name: Store artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-x64-glibc
+          path: artifacts/thread-cpu-usage-native.node
+  # This is not possible until we have ARM runners on GitHub
+  # windows-arm64-glibc:
+  #   runs-on: windows-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: Setup pnpm
+  #       uses: pnpm/action-setup@v4
+  #       with:
+  #         version: latest
+  #     - name: Setup Node.js
+  #       uses: actions/setup-node@v4
+  #       with:
+  #         node-version: 22
+  #         cache: 'pnpm'
+  #     - name: Install dependencies
+  #       uses: nick-fields/retry@v3.0.0
+  #       with:
+  #         max_attempts: 10
+  #         timeout_minutes: 15
+  #         retry_on: error
+  #         command: pnpm install
+  #     - name: Build the addon
+  #       run: pnpm run build
+  #     - name: Store artifacts
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: windows-arm64-glibc
+  #         path: build/Release/thread-cpu-usage-native.node
+  publish:
+    needs: [linux, darwin-x64-glibc, darwin-arm64-glibc, windows-x64-glibc]
+    environment: release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'pnpm'
+          registry-url: 'https://registry.npmjs.org'
+      - name: Install dependencies
+        uses: nick-fields/retry@v3.0.0
+        with:
+          max_attempts: 10
+          timeout_minutes: 15
+          retry_on: error
+          command: pnpm install
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: /tmp/artifacts
+      - name: Run Tests
+        run: pnpm test
+      - name: Bump Version
+        run: node scripts/update-version.js ${{ inputs.version }}
+      - name: Commit and Push
+        run: |
+          git config --global user.name "mcollina"
+          git config --global user.email "hello@matteocollina.com"
+          git commit -a -m "Bumped v${{ inputs.version }}"
+          git push origin HEAD:${{ github.ref }}
+      - name: Publish
+        run: pnpm publish --access public --tag ${{ inputs.prerelease == true && 'next' || 'latest' }} --publish-branch ${{ github.ref_name }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: 'Create Release Notes'
+        run: |
+          pnpx @matteo.collina/release-notes -a ${{ secrets.GH_RELEASE_TOKEN }} -t v${{ inputs.version }} -r thread-cpu-usage -o platformatic ${{ github.event.inputs.prerelease == 'true' && '-p' || '' }} -c ${{ github.ref }}

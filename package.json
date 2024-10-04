@@ -1,27 +1,37 @@
 {
   "name": "thread-cpu-usage",
-  "version": "0.1.0",
+  "version": "0.2.0-alpha.3",
   "description": "Get CPU usage per thread",
-  "main": "index.js",
-  "type": "module",
-  "gypfile": true,
-  "scripts": {
-    "build": "node-gyp rebuild",
-    "clean": "node-gyp clean",
-    "test": "npm run lint && borp --concurrency=1 --no-timeout",
-    "coverage": "npm run lint && borp -C -X test -X test/fixtures --concurrency=1 --no-timeout",
-    "lint": "eslint"
-  },
+  "homepage": "https://github.com/platformatic/thread-cpu-usage#readme",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/platformatic/thread-cpu-usage.git"
   },
-  "author": "Paolo Insogna <paolo@cowtech.it>",
-  "license": "Apache-2.0",
   "bugs": {
     "url": "https://github.com/platformatic/thread-cpu-usage/issues"
   },
-  "homepage": "https://github.com/platformatic/thread-cpu-usage#readme",
+  "author": "Platformatic Inc. <oss@platformatic.dev> (https://platformatic.dev)",
+  "license": "Apache-2.0",
+  "main": "index.js",
+  "type": "module",
+  "files": [
+    "binding.gyp",
+    "index.js",
+    "native",
+    "scripts",
+    "src"
+  ],
+  "scripts": {
+    "install": "node scripts/install.js",
+    "prebuild": "node scripts/prebuild.js",
+    "build": "node-gyp rebuild",
+    "postbuild": "cp build/Release/thread-cpu-usage-native.node artifacts/",
+    "clean": "node-gyp clean",
+    "test": "npm run lint && borp --concurrency=1 --no-timeout",
+    "coverage": "npm run lint && borp -C -X test -X test/fixtures --concurrency=1 --no-timeout",
+    "prepublishOnly": "node --disable-warning=ExperimentalWarning scripts/prepare-native-modules.js",
+    "lint": "eslint"
+  },
   "dependencies": {
     "node-addon-api": "^8.1.0"
   },
