@@ -11,10 +11,15 @@ using namespace Napi;
 #include <mach/mach_init.h>
 #include <mach/thread_act.h>
 #elif _WIN32
-// #include <Windows.h>
+#include <Windows.h>
+
+double ParseFileTime(FILETIME time) {
+  uint64_t ns = (((uint64_t) time.dwHighDateTime << 32) | (uint64_t) time.dwLowDateTime) * 100;
+  return ((double) ns) / 1000;
+}
 #endif
 
-Value getCpuUsage(Env env, double previousUser, double previousSystem) {
+Value GetCpuUsage(Env env, double previousUser, double previousSystem) {
   double user = 0;
   double system = 0;
 
@@ -33,6 +38,16 @@ Value getCpuUsage(Env env, double previousUser, double previousSystem) {
   user = usage.user_time.seconds * 1E6 + usage.user_time.microseconds;
   system = usage.system_time.seconds * 1E6 + usage.system_time.microseconds;
 #elif _WIN32
+  HANDLE thread_ = GetCurrentThread();
+  FILETIME _creation_time, _exit_time, kernel_time, user_time;
+
+  if (!GetThreadTimes(thread_, &_creation_time, &_exit_time, &kernel_time, &user_time)) {
+    throw Error::New(env, "Cannot get thread CPU usage information.");
+    return env.Null();
+  }
+
+  user = ParseFileTime(user_time);
+  system = ParseFileTime(kernel_time);
 #endif
 
   // Obtain the reading
@@ -68,7 +83,7 @@ Value GetThreadCpuUsage(const CallbackInfo& info) {
     }
   }
 
-  return getCpuUsage(env, previousUser, previousSystem);
+  return GetCpuUsage(env, previousUser, previousSystem);
 }
 
 Object Init(Env env, Object exports) {
