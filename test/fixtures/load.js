@@ -5,10 +5,6 @@ import { fileURLToPath } from 'node:url'
 import { isMainThread, parentPort, threadId, Worker } from 'node:worker_threads'
 import { threadCpuUsage } from '../../index.js'
 
-function formatMs (ms) {
-  return ms.toFixed(2)
-}
-
 function summarize () {
   const { user: processCpuUsageUser, system: processCpuUsageSystem } = process.cpuUsage()
   const { user: threadCpuUsageUser, system: threadCpuUsageSystem } = threadCpuUsage()
@@ -18,12 +14,12 @@ function summarize () {
       thread: threadId,
 
       processCpuUsage: {
-        user: formatMs(processCpuUsageUser / 1000),
-        system: formatMs(processCpuUsageSystem / 1000)
+        user: (processCpuUsageUser / 1000).toFixed(2),
+        system: (processCpuUsageSystem / 1000).toFixed(2)
       },
       threadCpuUsage: {
-        user: formatMs(threadCpuUsageUser / 1000),
-        system: formatMs(threadCpuUsageSystem / 1000)
+        user: (threadCpuUsageUser / 1000).toFixed(2),
+        system: (threadCpuUsageSystem / 1000).toFixed(2)
       }
     })
   )
@@ -72,10 +68,12 @@ const interval = setInterval(() => {
 
   const elapsed = (Number(process.hrtime.bigint() - hrtime) / 1e6).toFixed(2)
 
-  console.log(
-    JSON.stringify({
-      thread: threadId,
-      elapsed
-    })
-  )
+  if (process.env.DEBUG) {
+    console.log(
+      JSON.stringify({
+        thread: threadId,
+        elapsed
+      })
+    )
+  }
 }, index * 100)

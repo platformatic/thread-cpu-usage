@@ -5,13 +5,12 @@ using namespace Napi;
 #ifdef __linux__
 #include <sys/resource.h>
 #elif __APPLE__
-#include <mach/mach_error.h>
 #include <mach/mach_init.h>
 #include <mach/thread_act.h>
 #elif _WIN32
 #include <Windows.h>
 
-double ParseFileTime(FILETIME time) {
+double ToMicroseconds(FILETIME time) {
   uint64_t ns = (((uint64_t) time.dwHighDateTime << 32) | (uint64_t) time.dwLowDateTime) * 100;
   return ((double) ns) / 1000;
 }
@@ -56,8 +55,8 @@ Value GetCpuUsage(Env env, double previousUser, double previousSystem) {
     return env.Null();
   }
 
-  user = ParseFileTime(user_time);
-  system = ParseFileTime(kernel_time);
+  user = ToMicroseconds(user_time);
+  system = ToMicroseconds(kernel_time);
 #endif
 
   // Obtain the reading
