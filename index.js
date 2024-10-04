@@ -1,6 +1,5 @@
 import { createRequire } from 'node:module'
+import { getNativeAddonPath } from './lib/utils.js'
 
 const require = createRequire(import.meta.url)
-const native = require('./build/Release/thread-cpu-usage-native.node')
-
-export const threadCpuUsage = native.threadCpuUsage
+export const threadCpuUsage = require(getNativeAddonPath()).threadCpuUsage

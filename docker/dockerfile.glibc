@@ -1,0 +1,8 @@
+FROM node:22-slim
+
+RUN apt update && apt install -qq -y build-essential python3
+
+COPY . /app
+WORKDIR /app
+
+RUN npm install

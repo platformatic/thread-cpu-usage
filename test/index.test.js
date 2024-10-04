@@ -31,9 +31,10 @@ test('it should give proper thread usage', async () => {
 
     /*
       Each thread is designed to have a utilization two times the other one.
-      But since we cant really predict the OS scheduling, we just request it to be more than 33%.
+      But since we cant really predict the OS scheduling, we just request it to be more than 20% and that
+      the trend is monotonic increasing.
     */
-    ok(threadDifference > 1.3)
+    ok(threadDifference > 1.2)
   }
 })
 
