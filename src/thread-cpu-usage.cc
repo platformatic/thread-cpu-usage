@@ -3,9 +3,7 @@
 using namespace Napi;
 
 #ifdef __linux__
-// #include <errno.h>
-// #include <pthread.h>
-// #include <string.h>
+#include <sys/resource.h>
 #elif __APPLE__
 #include <mach/mach_error.h>
 #include <mach/mach_init.h>
@@ -24,6 +22,18 @@ Value GetCpuUsage(Env env, double previousUser, double previousSystem) {
   double system = 0;
 
 #ifdef __linux__
+  clockid_t clockid;
+  pthread_getcpuclockid(pthread_self(), &clockid);
+
+  struct rusage usage;
+
+  if (getrusage(RUSAGE_THREAD, &usage) == -1) {
+    throw Error::New(env, "Cannot get thread CPU usage information.");
+    return env.Null();
+  }
+
+  user = usage.ru_utime.tv_sec * 1E6 + usage.ru_utime.tv_usec;
+  system = usage.ru_stime.tv_sec * 1E6 + usage.ru_stime.tv_usec;
 #elif __APPLE__
   mach_port_t thread = mach_thread_self();
   mach_msg_type_number_t count = THREAD_BASIC_INFO_COUNT;
