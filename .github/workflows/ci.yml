@@ -1,0 +1,29 @@
+---
+name: CI
+on: [push, pull_request, workflow_dispatch]
+jobs:
+  ci:
+    needs: setup-node_modules
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        node-version: [20, 22]
+        os: [ubuntu-latest, mac-latest, windows-latest]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: 'pnpm'
+      - name: pnpm install
+        uses: nick-fields/retry@v3.0.0
+        with:
+          max_attempts: 10
+          timeout_minutes: 15
+          retry_on: error
+          command: pnpm install
+      - name: Run Tests
+        run: pnpm test
