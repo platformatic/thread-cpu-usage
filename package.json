@@ -15,10 +15,13 @@
   "main": "index.js",
   "type": "module",
   "files": [
+    "binding.gyp",
     "index.js",
-    "native"
+    "native",
+    "src"
   ],
   "scripts": {
+    "install": "node scripts/install.js",
     "prebuild": "node scripts/prebuild.js",
     "build": "node-gyp rebuild",
     "postbuild": "cp build/Release/thread-cpu-usage-native.node artifacts/",
