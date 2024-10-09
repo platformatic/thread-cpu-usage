@@ -17,6 +17,7 @@
   "files": [
     "binding.gyp",
     "index.js",
+    "lib",
     "native",
     "scripts",
     "src"

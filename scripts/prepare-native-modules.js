@@ -1,6 +1,6 @@
 import { cp, glob } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
-import { cleanNativeDirectory, nativeDir } from './helper.js'
+import { cleanNativeDirectory, nativeDir } from '../lib/utils.js'
 
 await cleanNativeDirectory()
 

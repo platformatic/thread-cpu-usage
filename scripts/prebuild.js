@@ -1,3 +1,3 @@
-import { getNativeTriplet } from './helper.js'
+import { getNativeTriplet } from '../lib/utils.js'
 
 console.log(`Current target: ${getNativeTriplet().join('-')}`)
