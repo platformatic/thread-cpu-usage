@@ -35,7 +35,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: linux-${{ matrix.arch }}-${{ matrix.libc }}
-          path: artifacts/thread-cpu-usage-native.node
+          path: native/linux-${{ matrix.arch }}-${{ matrix.libc }}.node
 
   darwin-x64-glibc:
     runs-on: macos-13
@@ -64,7 +64,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: darwin-x64-glibc
-          path: artifacts/thread-cpu-usage-native.node
+          path: native/darwin-x64-glibc.node
   darwin-arm64-glibc:
     runs-on: macos-latest
     steps:
@@ -92,7 +92,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: darwin-arm64-glibc
-          path: artifacts/thread-cpu-usage-native.node
+          path: native/darwin-arm64-glibc.node
   windows-x64-glibc:
     runs-on: windows-latest
     steps:
@@ -120,7 +120,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: windows-x64-glibc
-          path: artifacts/thread-cpu-usage-native.node
+          path: native/windows-x64-glibc.node
   # This is not possible until we have ARM runners on GitHub
   # windows-arm64-glibc:
   #   runs-on: windows-latest
@@ -149,7 +149,7 @@ jobs:
   #       uses: actions/upload-artifact@v4
   #       with:
   #         name: windows-arm64-glibc
-  #         path: build/Release/thread-cpu-usage-native.node
+  #         path: native/windows-arm64-glibc.node
   publish:
     needs: [linux, darwin-x64-glibc, darwin-arm64-glibc, windows-x64-glibc]
     environment: release
