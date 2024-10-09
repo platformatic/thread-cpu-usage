@@ -25,7 +25,7 @@
     "install": "node scripts/install.js",
     "prebuild": "node scripts/prebuild.js",
     "build": "node-gyp rebuild",
-    "postbuild": "cp build/Release/thread-cpu-usage-native.node artifacts/",
+    "postbuild": "node scripts/postbuild.js",
     "clean": "node-gyp clean",
     "test": "npm run lint && borp --concurrency=1 --no-timeout",
     "coverage": "npm run lint && borp -C -X test -X test/fixtures --concurrency=1 --no-timeout",

@@ -1,6 +1,3 @@
-import { mkdir } from 'node:fs/promises'
-import { arch, platform } from 'node:os'
-import { resolve } from 'node:path'
+import { getNativeTriplet } from './helper.js'
 
-console.log(`Current target: ${platform()}-${arch()}`)
-await mkdir(resolve(process.cwd(), 'artifacts'), { recursive: true })
+console.log(`Current target: ${getNativeTriplet().join('-')}`)

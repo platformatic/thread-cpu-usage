@@ -1,10 +1,8 @@
-import { cp, glob, mkdir, rm } from 'node:fs/promises'
+import { cp, glob } from 'node:fs/promises'
 import { basename, dirname, resolve } from 'node:path'
+import { cleanNativeDirectory, nativeDir } from './helper.js'
 
-const nativeDir = resolve(process.cwd(), 'native')
-
-await rm(nativeDir, { force: true, recursive: true })
-await mkdir(nativeDir, { recursive: true })
+await cleanNativeDirectory()
 
 for await (const path of glob('/tmp/artifacts/**/*.node')) {
   const triplet = basename(dirname(path))
