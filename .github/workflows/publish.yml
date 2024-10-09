@@ -30,7 +30,7 @@ jobs:
       - name: Build Image
         run: docker buildx build --load --platform linux/${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }} -t thread-cpu-usage-builder -f docker/dockerfile.${{ matrix.libc }} .
       - name: Build Addon
-        run: docker run --platform linux/${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }} -v ./artifacts:/app/artifacts thread-cpu-usage-builder npm run build
+        run: docker run --platform linux/${{ matrix.arch == 'x64' && 'amd64' || 'arm64' }} -v ./native:/app/native thread-cpu-usage-builder npm run build
       - name: Store artifacts
         uses: actions/upload-artifact@v4
         with:
