@@ -1,6 +1,6 @@
 {
   "name": "thread-cpu-usage",
-  "version": "0.2.0-alpha.3",
+  "version": "0.2.0-alpha.4",
   "description": "Get CPU usage per thread",
   "homepage": "https://github.com/platformatic/thread-cpu-usage#readme",
   "repository": {
