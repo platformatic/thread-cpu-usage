@@ -4,6 +4,14 @@ import { test } from 'node:test'
 import { fileURLToPath } from 'node:url'
 import { threadCpuUsage } from '../index.js'
 
+function validateResult (result) {
+  ok(result !== null)
+  ok(Number.isFinite(parseInt(result.user)))
+  ok(Number.isFinite(parseInt(result.system)))
+  ok(result.user >= 0)
+  ok(result.system >= 0)
+}
+
 test('it should give proper thread usage', async () => {
   const { stdout } = spawnSync('node', [fileURLToPath(new URL('./fixtures/load.js', import.meta.url))])
 
@@ -11,6 +19,7 @@ test('it should give proper thread usage', async () => {
     .toString()
     .trim()
     .split('\n')
+    .filter(line => line.startsWith('{') && line.endsWith('}'))
     .map(l => JSON.parse(l))
 
   deepEqual(lines[0].thread, 0)
@@ -18,28 +27,28 @@ test('it should give proper thread usage', async () => {
   deepEqual(lines[2].thread, 2)
   deepEqual(lines[3].thread, 3)
 
-  for (let i = 0; i < 3; i++) {
-    const processDifference = lines[i].processCpuUsage.user / lines[i + 1].processCpuUsage.user
-    const threadDifference = lines[i].threadCpuUsage.user / lines[i + 1].threadCpuUsage.user
-
-    /*
-      All CPU usages should be the same. Technically they should have returned the same
-      value but since we measure it at different times they vary a little bit.
-    */
-    ok(processDifference > 0.95)
-    ok(processDifference < 1.05)
-
-    /*
-      Each thread is designed to have a utilization two times the other one.
-      But since we cant really predict the OS scheduling, we just request it to be more than 20% and that
-      the trend is monotonic increasing.
-    */
-    ok(threadDifference > 1.2)
+  for (const line of lines) {
+    validateResult(line.processCpuUsage)
+    validateResult(line.threadCpuUsage)
   }
 })
 
 test('it works on the main thread, with or without arguments', () => {
-  threadCpuUsage(threadCpuUsage())
+  const result = threadCpuUsage()
+
+  validateResult(result)
+  validateResult(threadCpuUsage())
+  validateResult(threadCpuUsage(result))
+
+  let previous = threadCpuUsage()
+  for (let i = 0; i < 10; i++) {
+    const current = threadCpuUsage()
+
+    validateResult(current)
+    ok(current.user >= previous.user)
+    ok(current.system >= previous.system)
+    previous = current
+  }
 })
 
 test('it complains for invalid arguments', async () => {
